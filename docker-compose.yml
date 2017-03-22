@@ -1,0 +1,54 @@
+version: '2'
+
+volumes:
+  
+  frelancer-mysql-data:
+    driver: local
+
+  frelancer-redis-data:
+    driver: local
+
+services:
+  
+  mysql:
+    image: ambientum/mysql:5.7
+    container_name: frelancer-mysql
+    volumes:
+      - frelancer-mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=frelancer
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+
+  cache:
+    image: ambientum/redis:3.2
+    container_name: frelancer-redis
+    command: --appendonly yes
+    volumes:
+      - frelancer-redis-data:/data
+    ports:
+      - "6379:6379"
+
+  app:
+    image: ambientum/php:7.1-caddy
+    container_name: frelancer-app
+    volumes:
+      - .:/var/www/app
+    ports:
+      - "8000:8080"
+    links:
+      - mysql
+      - cache
+      - mariadb
+
+  gulp-watch:
+    image: allanzi/node:latest
+    container_name: frelancer-gulp-watch
+    command: gulp watch
+    volumes:
+     - .:/var/www/app
+    ports:
+     - "8081:8080"
